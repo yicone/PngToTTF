@@ -30,17 +30,25 @@ fontStream
     console.error(err);
   });
 
-files.forEach((file) => {
-  if (path.extname(file) === '.svg') {
-    // 從檔名中提取Unicode
-    const unicodeMatch = file.match(/U\+([0-9A-Fa-f]+)/);
-    if (unicodeMatch) {
-      const unicode = [String.fromCodePoint(parseInt(unicodeMatch[1], 16))];
-      const name = 'icon_' + unicodeMatch[1]; // 使用Unicode的十六進位表示作為名稱
-      const glyph = fs.createReadStream(path.join(inputFolder, file));
-      glyph.metadata = { unicode, name };
+/*
+  逐一讀取資料夾中的SVG檔案，並將其加入字體流中
+  這裡假設SVG檔案的檔名為单个汉字
+  例如：龠.svg(U+9FA0)
+  glyph.metadata = { unicode: ['龠'], name: 'icon_9FA0' }
+*/
+files.forEach((filename) => {
+  if (path.extname(filename) === '.svg') {
+    const baseFilename = path.basename(filename, ".svg");
+    // 將文件名中的中文部分轉換為Unicode的十六進位表示
+    const hexEncodedBaseFilename = baseFilename.replace(/[\u4E00-\u9FA5]/, function (c) {
+      return c.charCodeAt().toString(16);
+    });
+
+    const name = 'icon_' + hexEncodedBaseFilename;
+    const inputFilePath = path.join(inputFolder, filename);
+    const glyph = fs.createReadStream(inputFilePath);
+    glyph.metadata = { unicode: [baseFilename], name };
       fontStream.write(glyph);
-    }
   }
   progressBar.tick();
 });
