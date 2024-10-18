@@ -1,1 +1,7 @@
 .DS_Store
+node_modules
+
+crop_v5/
+svg_separate/
+final_font/
+pico/
